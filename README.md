@@ -14,6 +14,8 @@ Examples were ported from GLSL shader code in the [sdf-explorer](https://github.
 - **Manufactured objects**: Teapots, gears, and mechanical parts
 - **Miscellaneous**: Food items, abstract shapes, and more
 
+**Note:** This library was automatically ported/written using `claude-4.5-opus-high`, via [Cursor](https://cursor.com/).  As with all software, there may be bugs and inconsistencies.  Please feel free to report any problems via GitHub Issues.
+
 ## Installation & Building
 
 ### Prerequisites and Dependencies
