@@ -14,19 +14,12 @@ Examples were ported from GLSL shader code in the [sdf-explorer](https://github.
 - **Manufactured objects**: Teapots, gears, and mechanical parts
 - **Miscellaneous**: Food items, abstract shapes, and more
 
-
-
-**Note:** This library was automatically ported/written using `claude-4.5-opus-high`, via [Cursor](https://cursor.com/).  As with all software, there may be bugs and inconsistencies.  Please feel free to report any problems via GitHub Issues.
-
 ## Installation & Building
 
-### Prerequisites and Dependencies
+### Prerequisites
 - CMake 3.16+
 - C++17 compatible compiler
-- [OpenGL Mathematics (GLM)](https://github.com/g-truc/glm)
-- [Polyscope](https://polyscope.run/)
-
-_Note: GLM and Polyscope dependencies will be installed as submodules during build (see instructions below); you do not need to install them separately._
+- Internet connection (for fetching Polyscope during build)
 
 ### Build Steps
 
@@ -189,14 +182,20 @@ Bezier, Capsule, Cone, Cube, Cylinder, Dodecahedron, Helix, Hexprism, Icosahedro
 ### Fractals (4)
 Julia, Mandelbulb, Menger, Serpinski
 
-### Animals (1)
-Fish
+### Animals (12)
+Dinosaur, Elephant, Fish, Girl, HumanHead, HumanSkull, Jellyfish, MantaRay, PixarMike, Snail, Snake, Tardigrade
 
-### Manufactured (2)
-Gear, Teapot
+### Nature (4)
+Mountain, Mushroom, Rock, Tree
 
-### Miscellaneous (1)
-Burger
+### Manufactured (15)
+Cables, Castle, Chain, Gear, GrandPiano, Key, Knob, Mech, Mobius, Rooks, Spike, Teapot, Temple, UprightPiano, Vase
+
+### Vehicle (6)
+Boat, Cybertruck, Jetfighter, Lamborghini, Oldcar, TieFighter
+
+### Miscellaneous (3)
+Burger, Cheese, Dalek
 
 ## Adding New SDFs
 

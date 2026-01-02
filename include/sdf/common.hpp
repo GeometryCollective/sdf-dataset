@@ -295,6 +295,133 @@ inline float seededRandom(uint32_t& seed) {
     return static_cast<float>(seed) / 4294967296.0f;
 }
 
+// ============================================================================
+// Procedural Noise Functions (replacing texture sampling)
+// ============================================================================
+
+// Hash functions for procedural noise
+inline vec2 hash22(const vec2& p) {
+    vec3 p3 = fract(vec3(p.x, p.y, p.x) * vec3(0.1031f, 0.1030f, 0.0973f));
+    p3 += dot(p3, vec3(p3.y, p3.x, p3.z) + 33.33f);
+    return fract((vec2(p3.x, p3.x) + vec2(p3.y, p3.z)) * vec2(p3.z, p3.y));
+}
+
+inline vec3 hash32(const vec2& p) {
+    vec3 p3 = fract(vec3(p.x, p.y, p.x) * vec3(0.1031f, 0.1030f, 0.0973f));
+    p3 += dot(p3, vec3(p3.y, p3.x, p3.z) + 33.33f);
+    return fract((vec3(p3.x, p3.x, p3.y) + vec3(p3.y, p3.z, p3.z)) * vec3(p3.z, p3.y, p3.x));
+}
+
+// Value noise 2D
+inline float valueNoise2D(const vec2& p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    
+    // Cubic Hermite interpolation (smoother than linear)
+    vec2 u = f * f * (3.0f - 2.0f * f);
+    
+    float a = hash12(i);
+    float b = hash12(i + vec2(1.0f, 0.0f));
+    float c = hash12(i + vec2(0.0f, 1.0f));
+    float d = hash12(i + vec2(1.0f, 1.0f));
+    
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+// Value noise 3D
+inline float valueNoise3D(const vec3& p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    
+    // Cubic Hermite interpolation
+    vec3 u = f * f * (3.0f - 2.0f * f);
+    
+    float n000 = hash13(i);
+    float n100 = hash13(i + vec3(1.0f, 0.0f, 0.0f));
+    float n010 = hash13(i + vec3(0.0f, 1.0f, 0.0f));
+    float n110 = hash13(i + vec3(1.0f, 1.0f, 0.0f));
+    float n001 = hash13(i + vec3(0.0f, 0.0f, 1.0f));
+    float n101 = hash13(i + vec3(1.0f, 0.0f, 1.0f));
+    float n011 = hash13(i + vec3(0.0f, 1.0f, 1.0f));
+    float n111 = hash13(i + vec3(1.0f, 1.0f, 1.0f));
+    
+    float n00 = mix(n000, n100, u.x);
+    float n10 = mix(n010, n110, u.x);
+    float n01 = mix(n001, n101, u.x);
+    float n11 = mix(n011, n111, u.x);
+    
+    float n0 = mix(n00, n10, u.y);
+    float n1 = mix(n01, n11, u.y);
+    
+    return mix(n0, n1, u.z);
+}
+
+// FBM (Fractal Brownian Motion) 2D - 4 octaves
+inline float fbm2D(const vec2& p, int octaves = 4) {
+    float value = 0.0f;
+    float amplitude = 0.5f;
+    vec2 freq = p;
+    
+    for (int i = 0; i < octaves; i++) {
+        value += amplitude * valueNoise2D(freq);
+        freq *= 2.01f;
+        amplitude *= 0.5f;
+    }
+    
+    return value;
+}
+
+// FBM 3D - 4 octaves
+inline float fbm3D(const vec3& p, int octaves = 4) {
+    float value = 0.0f;
+    float amplitude = 0.5f;
+    vec3 freq = p;
+    
+    for (int i = 0; i < octaves; i++) {
+        value += amplitude * valueNoise3D(freq);
+        freq *= 2.01f;
+        amplitude *= 0.5f;
+    }
+    
+    return value;
+}
+
+// Billow noise (abs of smooth noise for cloudy effects)
+inline float bnoise(float x) {
+    float i = floor(x);
+    float f = fract(x);
+    float s = sign(fract(x / 2.0f) - 0.5f);
+    float k = 0.5f + 0.5f * sin(i);
+    return s * f * (f - 1.0f) * ((16.0f * k - 4.0f) * f * (f - 1.0f) - 1.0f);
+}
+
+// FBM for 1D input, 3D output (used in Girl shader for animation)
+inline vec3 fbm13(float x, float g, int octaves = 6) {
+    vec3 n = vec3(0.0f);
+    float s = 1.0f;
+    for (int i = 0; i < octaves; i++) {
+        n += s * vec3(bnoise(x), bnoise(x + 13.314f), bnoise(x + 31.7211f));
+        s *= g;
+        x *= 2.01f;
+        x += 0.131f;
+    }
+    return n;
+}
+
+// Linear step (used in various SDFs)
+inline float linearstep(float a, float b, float x) {
+    return clamp((x - a) / (b - a), 0.0f, 1.0f);
+}
+
+// Saturate (clamp to [0,1])
+inline float saturate(float x) {
+    return clamp(x, 0.0f, 1.0f);
+}
+
+inline vec3 saturate(const vec3& v) {
+    return clamp(v, vec3(0.0f), vec3(1.0f));
+}
+
 } // namespace sdf
 
 

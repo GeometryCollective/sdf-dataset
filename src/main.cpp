@@ -140,6 +140,9 @@ int main(int argc, char* argv[]) {
     // Initialize Polyscope
     polyscope::init();
     
+    // Use shadow-only mode instead of the ground plane
+    polyscope::options::groundPlaneMode = polyscope::GroundPlaneMode::ShadowOnly;
+    
     // Register volume grid
     glm::vec3 boundLow(minBound, minBound, minBound);
     glm::vec3 boundHigh(maxBound, maxBound, maxBound);
@@ -260,6 +263,14 @@ int main(int argc, char* argv[]) {
 
     };
     polyscope::state::userCallback = callback;
+    
+    // Enable isolines on the volume grid
+    scalarQ->setIsolinesEnabled(true);
+    
+    // Add a slice plane (enabled by default, but hide the plane and widget)
+    polyscope::SlicePlane* slicePlane = polyscope::addSceneSlicePlane();
+    slicePlane->setDrawPlane(false);
+    slicePlane->setDrawWidget(true);
     
     // Show the visualization
     polyscope::show();
