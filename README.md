@@ -1,8 +1,6 @@
 # Conservative SDF
 
-<p align="center">
-  <video src="media/ui_sample.mp4" width="600" controls></video>
-</p>
+![video of the interface inspecting an sdf shape](media/ui_sample.gif)
 
 A C++ library (plus optional visualizer) of closed-form conservative signed distance functions (SDFs).  **Conservative** means that the values φ provided at each point are guaranteed to be _no greater_ than the true distance to the shape boundary (Lipschitz constant no greater than 1).  Equivalently, an ball of radius φ will be empty, i.e., it will not intersect the surface.
 
