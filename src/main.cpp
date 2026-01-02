@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
             polyscope::ImplicitRenderMode mode = polyscope::ImplicitRenderMode::SphereMarch;
 
             // render the implicit isosurfaces from the current viewport
-            if(ImGui::Button("Render Implicit Surface")) {
+            if(ImGui::Button("Render Implicit Surface") || renderImg == nullptr) {
                 renderImg = 
                     polyscope::renderImplicitSurfaceBatch("rendered", bactchEvalSDF, mode, opts);
                 renderImg->setEnabled(true);
