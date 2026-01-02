@@ -170,10 +170,6 @@ Slice planes are invaluable for inspecting the interior of 3D SDF fields. Here's
 
 4. **Multiple Planes**: Add multiple slice planes to view orthogonal cross-sections simultaneously
 
-5. **Keyboard Shortcuts**:
-   - Press `[` and `]` to cycle through slice plane draw modes
-   - The plane can be set to show only what's in front, behind, or both sides
-
 ### Isosurface Extraction
 
 The viewer automatically enables isosurface extraction at distance = 0, showing the reconstructed surface. You can adjust this in the GUI:
