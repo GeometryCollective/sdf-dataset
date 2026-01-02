@@ -1,7 +1,7 @@
 # Conservative SDF
 
 <p align="center">
-  <img src="helix.jpg" width="400" />
+  <video src="media/ui_sample.mp4" width="600" controls></video>
 </p>
 
 A C++ library (plus optional visualizer) of closed-form conservative signed distance functions (SDFs).  **Conservative** means that the values φ provided at each point are guaranteed to be _no greater_ than the true distance to the shape boundary (Lipschitz constant no greater than 1).  Equivalently, an ball of radius φ will be empty, i.e., it will not intersect the surface.
@@ -13,6 +13,8 @@ Examples were ported from GLSL shader code in the [sdf-explorer](https://github.
 - **Animals**: Fish, and other organic forms
 - **Manufactured objects**: Teapots, gears, and mechanical parts
 - **Miscellaneous**: Food items, abstract shapes, and more
+
+
 
 **Note:** This library was automatically ported/written using `claude-4.5-opus-high`, via [Cursor](https://cursor.com/).  As with all software, there may be bugs and inconsistencies.  Please feel free to report any problems via GitHub Issues.
 
