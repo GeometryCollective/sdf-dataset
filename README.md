@@ -1,7 +1,7 @@
 # Conservative SDF
 
 <p align="center">
-  <img src="helix.jpg" width="400" />
+  <video src="media/ui_sample.mp4" width="600" controls></video>
 </p>
 
 A C++ library (plus optional visualizer) of closed-form conservative signed distance functions (SDFs).  **Conservative** means that the values φ provided at each point are guaranteed to be _no greater_ than the true distance to the shape boundary (Lipschitz constant no greater than 1).  Equivalently, an ball of radius φ will be empty, i.e., it will not intersect the surface.
@@ -164,10 +164,6 @@ Slice planes are invaluable for inspecting the interior of 3D SDF fields. Here's
    - The zero-crossing shows the exact surface location
 
 4. **Multiple Planes**: Add multiple slice planes to view orthogonal cross-sections simultaneously
-
-5. **Keyboard Shortcuts**:
-   - Press `[` and `]` to cycle through slice plane draw modes
-   - The plane can be set to show only what's in front, behind, or both sides
 
 ### Isosurface Extraction
 

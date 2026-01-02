@@ -8,14 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Dependencies
 # ============================================================================
 
-# Polyscope (fetched from GitHub) - includes its own compatible glm
-include(FetchContent)
-FetchContent_Declare(
-    polyscope
-    GIT_REPOSITORY https://github.com/nmwsharp/polyscope.git
-    GIT_TAG        v2.3.0
-)
-FetchContent_MakeAvailable(polyscope)
+add_subdirectory(deps/polyscope)
 
 # ============================================================================
 # SDF Library

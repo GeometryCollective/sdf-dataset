@@ -15,8 +15,9 @@
 #include <cstdlib>
 
 #include "polyscope/polyscope.h"
-#include "polyscope/volume_grid.h"
 #include "polyscope/slice_plane.h"
+#include "polyscope/volume_grid.h"
+#include "polyscope/implicit_helpers.h"
 
 #include "sdf/sdf.hpp"
 
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Use --list to see available SDFs.\n";
         return 1;
     }
-    
+
     std::cout << "Evaluating SDF '" << sdfName << "' on " 
               << resolution << "x" << resolution << "x" << resolution << " grid...\n";
     
@@ -152,20 +153,119 @@ int main(int argc, char* argv[]) {
     );
     
     // Add SDF values as a scalar quantity at nodes
-    auto* scalarQ = grid->addNodeScalarQuantity("distance", sdfValues);
+    auto* scalarQ = grid->addNodeScalarQuantity("distance", sdfValues, polyscope::DataType::SYMMETRIC);
     scalarQ->setEnabled(true);
+    scalarQ->setColorMap("coolwarm");
+    scalarQ->setIsolinesEnabled(true);
+    scalarQ->setIsolinePeriod(0.1f, false);
     
     // Enable isosurface extraction at distance = 0
     scalarQ->setIsosurfaceLevel(0.0f);
     scalarQ->setIsosurfaceVizEnabled(true);
+
+    // Slice plane by default
+    polyscope::SlicePlane* slicePlane = polyscope::addSlicePlane("SDF Slice Plane");
+    slicePlane->setEnabled(true);
+    slicePlane->setDrawPlane(false);
+    slicePlane->setDrawWidget(true);
+    slicePlane->setPose(glm::vec3(0.0f, 0.0f, 1.5f), glm::vec3(1.0f, 0.0f, 0.0f)); // move the widget off-center
+
+    polyscope::DepthRenderImageQuantity* renderImg = nullptr;
+   
+    // wrapper to evaluate the SDF in Polyscope's batch format
+    auto bactchEvalSDF = [&](float* inPos, float* outResult, size_t N) {
+        std::vector<glm::vec3> pBatch(N);
+        for (size_t i = 0; i < N; i++) {
+            pBatch[i] = glm::vec3(inPos[3*i], inPos[3*i+1], inPos[3*i+2]);
+        }
+        std::vector<float> out = sdf::evaluate(sdfName, pBatch);
+        for (size_t i = 0; i < N; i++) {
+            outResult[i] = out[i];
+        }
+    };
+
+    std::vector<std::string> uiModes = {"Isosurface Mesh", "Slice Volume", "Sphere March Render"};
+    int currUIModeInd = -1;
+
+    bool continuouslyRender = false;
+    polyscope::ImplicitRenderOpts opts;
+    opts.subsampleFactor = 2; // downsample the rendering for performance reasons
+
+    auto callback = [&]() {
+
+        // UI mode selector combobox
+        bool modeChanged = false;
+        if(currUIModeInd == -1) {
+            currUIModeInd = 1; // first time setup
+            modeChanged = true;
+        }
+        if (ImGui::BeginCombo("UI Mode", uiModes[currUIModeInd].c_str())) {
+            for (int i = 0; i < uiModes.size(); i++) {
+                bool isSelected = (currUIModeInd == i);
+                if (ImGui::Selectable(uiModes[i].c_str(), isSelected)) {
+                    currUIModeInd = i;
+                    modeChanged = true;
+                }
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        if (modeChanged) {
+            if (uiModes[currUIModeInd] == "Isosurface Mesh") {
+                grid->setEnabled(true);
+                scalarQ->setEnabled(true);
+                scalarQ->setIsosurfaceVizEnabled(true);
+                scalarQ->setGridcubeVizEnabled(false);
+                slicePlane->setEnabled(false);
+            }
+            else if (uiModes[currUIModeInd] == "Slice Volume") {
+                grid->setEnabled(true);
+                scalarQ->setEnabled(true);
+                scalarQ->setIsosurfaceVizEnabled(true);
+                scalarQ->setGridcubeVizEnabled(true);
+                slicePlane->setEnabled(true);
+            }
+            else if (uiModes[currUIModeInd] == "Sphere March Render") {
+                grid->setEnabled(false);
+                scalarQ->setEnabled(false);
+                slicePlane->setEnabled(false);
+            }
+        }
+        
+        if (uiModes[currUIModeInd] == "Sphere March Render") {
+            // setup options
+            polyscope::ImplicitRenderMode mode = polyscope::ImplicitRenderMode::SphereMarch;
+
+            // render the implicit isosurfaces from the current viewport
+            if(ImGui::Button("Render Implicit Surface") || renderImg == nullptr) {
+                renderImg = 
+                    polyscope::renderImplicitSurfaceBatch("rendered", bactchEvalSDF, mode, opts);
+                renderImg->setEnabled(true);
+                grid->setEnabled(false);
+            }
+            ImGui::SameLine();
+            bool changed = ImGui::Checkbox("Continuous Render", &continuouslyRender);
+            if(continuouslyRender) {
+                if(changed) {
+                    grid->setEnabled(false);
+                }
+                renderImg = 
+                    polyscope::renderImplicitSurfaceBatch("rendered", bactchEvalSDF, mode, opts);
+                renderImg->setEnabled(true);
+            }
+            ImGui::InputInt("Render Subsample Factor", &opts.subsampleFactor);
+            opts.subsampleFactor = std::max(1, opts.subsampleFactor);
+
+        }
+
+    };
+    polyscope::state::userCallback = callback;
     
     // Enable isolines on the volume grid
     scalarQ->setIsolinesEnabled(true);
-    
-    // Add a slice plane (enabled by default, but hide the plane and widget)
-    polyscope::SlicePlane* slicePlane = polyscope::addSceneSlicePlane();
-    slicePlane->setDrawPlane(false);
-    slicePlane->setDrawWidget(true);
     
     // Show the visualization
     polyscope::show();
