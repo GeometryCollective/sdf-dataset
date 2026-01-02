@@ -267,11 +267,6 @@ int main(int argc, char* argv[]) {
     // Enable isolines on the volume grid
     scalarQ->setIsolinesEnabled(true);
     
-    // Add a slice plane (enabled by default, but hide the plane and widget)
-    polyscope::SlicePlane* slicePlane = polyscope::addSceneSlicePlane();
-    slicePlane->setDrawPlane(false);
-    slicePlane->setDrawWidget(true);
-    
     // Show the visualization
     polyscope::show();
     
