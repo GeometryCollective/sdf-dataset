@@ -8,7 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Dependencies
 # ============================================================================
 
-add_subdirectory(deps/polyscope)
+# Only add polyscope if it hasn't been added already
+if (NOT TARGET polyscope)
+  add_subdirectory(deps/polyscope)
+endif()
 
 # ============================================================================
 # SDF Library
@@ -28,6 +31,9 @@ target_compile_definitions(sdf_lib PUBLIC
     GLM_ENABLE_EXPERIMENTAL
     GLM_FORCE_SWIZZLE
 )
+
+# Create namespace alias
+add_library(sdf_dataset::sdf_lib ALIAS sdf_lib)
 
 # ============================================================================
 # Main Executable (Polyscope visualization)
