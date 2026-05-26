@@ -134,6 +134,12 @@ The included `sdf_viewer` tool visualizes SDFs using [Polyscope](https://polysco
 
 # Animate the fish at t=1.5
 ./sdf_viewer Fish --time 1.5
+
+# Render PNG screenshots of every SDF to the current directory
+./sdf_viewer --renderAll --resolution 64
+
+# Same, but use sphere tracing instead of mesh isocontouring
+./sdf_viewer --renderAll --sphereTrace
 ```
 
 ### Command Line Options
@@ -144,7 +150,18 @@ The included `sdf_viewer` tool visualizes SDFs using [Polyscope](https://polysco
 | `--time T`, `-t T` | Time parameter for animated SDFs (default: 0.0) |
 | `--seed S`, `-s S` | Random seed for procedural SDFs (default: 12345) |
 | `--list`, `-l` | List all available SDFs |
+| `--renderAll` | Render a screenshot of every available SDF to `<Name>.png` in the working directory, then exit. No `<sdf_name>` argument is needed in this mode. |
+| `--sphereTrace` | When used with `--renderAll`, render via sphere tracing (`polyscope::renderImplicitSurfaceBatch`) instead of extracting a mesh isosurface from a sampled grid. Only valid in combination with `--renderAll`. |
 | `--help`, `-h` | Show help message |
+
+### Batch Rendering with `--renderAll`
+
+`--renderAll` is a non-interactive mode intended for generating a gallery of every SDF in the dataset. It iterates over the full list returned by `sdf::getAvailableSDFs()`, configures a fixed 3/4 camera view, and writes one PNG per SDF (named `<Name>.png`) into the current working directory. The `--resolution`, `--time`, and `--seed` flags apply to each SDF in the batch.
+
+Two rendering backends are available:
+
+- **Mesh isocontouring (default).** The SDF is sampled on a `resolution^3` grid and Polyscope extracts the `distance = 0` isosurface as a mesh. This is fast and produces clean geometry, but resolution is limited by the grid spacing.
+- **Sphere tracing (`--sphereTrace`).** Pixels are rendered directly from the SDF using `polyscope::renderImplicitSurfaceBatch` in `SphereMarch` mode. This avoids grid aliasing and tends to look sharper on fractals and other high-frequency shapes, at the cost of more SDF evaluations per frame. `--resolution` is not used here; image resolution is controlled by the Polyscope window/render options.
 
 ### Using Slice Planes in Polyscope
 

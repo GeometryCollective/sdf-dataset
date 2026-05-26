@@ -2,12 +2,15 @@
 //
 // Usage:
 //   sdf_viewer <sdf_name> [--resolution N] [--time T] [--seed S] [--list]
+//   sdf_viewer --renderAll [--resolution N] [--time T] [--seed S] [--sphereTrace]
 //
 // Examples:
 //   sdf_viewer Sphere
 //   sdf_viewer Mandelbulb --resolution 64
 //   sdf_viewer Fish --time 1.5
 //   sdf_viewer --list
+//   sdf_viewer --renderAll --resolution 64
+//   sdf_viewer --renderAll --sphereTrace
 
 #include <iostream>
 #include <string>
@@ -18,23 +21,30 @@
 #include "polyscope/slice_plane.h"
 #include "polyscope/volume_grid.h"
 #include "polyscope/implicit_helpers.h"
+#include "polyscope/view.h"
 
 #include "sdf/sdf.hpp"
 
 void printUsage(const char* progName) {
     std::cout << "Usage: " << progName << " <sdf_name> [options]\n"
+              << "       " << progName << " --renderAll [options]\n"
               << "\n"
               << "Options:\n"
               << "  --resolution N, -r N   Grid resolution (default: 32)\n"
               << "  --time T, -t T         Time parameter for animated SDFs (default: 0.0)\n"
               << "  --seed S, -s S         Random seed for procedural SDFs (default: 12345)\n"
               << "  --list, -l             List all available SDFs\n"
+              << "  --renderAll            Render screenshots of all SDFs to disk\n"
+              << "  --sphereTrace          Use sphere tracing instead of mesh isocontouring\n"
+              << "                         (only valid with --renderAll)\n"
               << "  --help, -h             Show this help message\n"
               << "\n"
               << "Examples:\n"
               << "  " << progName << " Sphere\n"
               << "  " << progName << " Mandelbulb --resolution 64\n"
-              << "  " << progName << " Fish --time 1.5\n";
+              << "  " << progName << " Fish --time 1.5\n"
+              << "  " << progName << " --renderAll --resolution 64\n"
+              << "  " << progName << " --renderAll --sphereTrace\n";
 }
 
 void listSDFs() {
@@ -50,6 +60,8 @@ int main(int argc, char* argv[]) {
     uint32_t resolution = 32;
     float time = 0.0f;
     uint32_t seed = 12345;
+    bool renderAll = false;
+    bool sphereTrace = false;
     
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -61,6 +73,12 @@ int main(int argc, char* argv[]) {
         else if (arg == "--list" || arg == "-l") {
             listSDFs();
             return 0;
+        }
+        else if (arg == "--renderAll") {
+            renderAll = true;
+        }
+        else if (arg == "--sphereTrace") {
+            sphereTrace = true;
         }
         else if ((arg == "--resolution" || arg == "-r") && i + 1 < argc) {
             resolution = static_cast<uint32_t>(std::atoi(argv[++i]));
@@ -81,8 +99,14 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    if (sdfName.empty()) {
+    if (!renderAll && sdfName.empty()) {
         std::cerr << "Error: No SDF name specified.\n\n";
+        printUsage(argv[0]);
+        return 1;
+    }
+    
+    if (sphereTrace && !renderAll) {
+        std::cerr << "Error: --sphereTrace can only be used with --renderAll.\n\n";
         printUsage(argv[0]);
         return 1;
     }
@@ -97,10 +121,123 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    if (!found) {
+    if (!renderAll && !found) {
         std::cerr << "Error: Unknown SDF '" << sdfName << "'.\n";
         std::cerr << "Use --list to see available SDFs.\n";
         return 1;
+    }
+    
+    // Handle --renderAll mode: render screenshots of all SDFs
+    if (renderAll) {
+        std::cout << "Rendering all SDFs at resolution " 
+                  << resolution << "x" << resolution << "x" << resolution;
+        if (sphereTrace) {
+            std::cout << " (sphere tracing)";
+        }
+        std::cout << "...\n";
+        
+        // Initialize Polyscope
+        polyscope::init();
+        polyscope::options::groundPlaneMode = polyscope::GroundPlaneMode::ShadowOnly;
+        
+        // Set up 3/4 view camera: positioned above and offset, looking down at center
+        glm::vec3 cameraPos(2.5f, 2.0f, 2.5f);
+        glm::vec3 targetPos(0.0f, 0.0f, 0.0f);
+        polyscope::view::lookAt(cameraPos, targetPos);
+        
+        // Isosurface color: RGB (164, 165, 208) normalized to [0,1]
+        glm::vec3 isosurfaceColor(164.0f / 255.0f, 165.0f / 255.0f, 208.0f / 255.0f);
+        
+        // Grid bounds (used for mesh-based rendering)
+        const float minBound = -1.0f;
+        const float maxBound = 1.0f;
+        
+        // Generate grid points (only needed for mesh-based rendering)
+        std::vector<glm::vec3> points;
+        glm::vec3 boundLow(minBound, minBound, minBound);
+        glm::vec3 boundHigh(maxBound, maxBound, maxBound);
+        glm::uvec3 gridDim(resolution, resolution, resolution);
+        
+        if (!sphereTrace) {
+            const float step = (maxBound - minBound) / static_cast<float>(resolution - 1);
+            points.reserve(resolution * resolution * resolution);
+            for (uint32_t z = 0; z < resolution; ++z) {
+                for (uint32_t y = 0; y < resolution; ++y) {
+                    for (uint32_t x = 0; x < resolution; ++x) {
+                        float px = minBound + x * step;
+                        float py = minBound + y * step;
+                        float pz = minBound + z * step;
+                        points.emplace_back(px, py, pz);
+                    }
+                }
+            }
+        }
+        
+        // Sphere tracing options
+        polyscope::ImplicitRenderOpts opts;
+        opts.subsampleFactor = 1;  // Full resolution for batch rendering
+        
+        for (const auto& name : availableSDFs) {
+            std::cout << "  Rendering '" << name << "'...\n";
+            
+            // Clear previous structures
+            polyscope::removeAllStructures();
+            polyscope::removeAllSlicePlanes();
+            
+            if (sphereTrace) {
+                // Sphere tracing mode: use renderImplicitSurfaceBatch
+                // Capture name, time, seed for the lambda
+                auto batchEvalSDF = [&name, time, seed](float* inPos, float* outResult, size_t N) {
+                    std::vector<glm::vec3> pBatch(N);
+                    for (size_t i = 0; i < N; i++) {
+                        pBatch[i] = glm::vec3(inPos[3*i], inPos[3*i+1], inPos[3*i+2]);
+                    }
+                    std::vector<float> out = sdf::evaluate(name, pBatch, time, seed);
+                    for (size_t i = 0; i < N; i++) {
+                        outResult[i] = out[i];
+                    }
+                };
+                
+                polyscope::ImplicitRenderMode mode = polyscope::ImplicitRenderMode::SphereMarch;
+                auto* renderImg = polyscope::renderImplicitSurfaceBatch("rendered", batchEvalSDF, mode, opts);
+                renderImg->setEnabled(true);
+                
+            } else {
+                // Mesh-based isosurface mode
+                std::vector<float> sdfValues;
+                try {
+                    sdfValues = sdf::evaluate(name, points, time, seed);
+                } catch (const std::exception& e) {
+                    std::cerr << "    Error evaluating SDF: " << e.what() << "\n";
+                    continue;
+                }
+                
+                // Register volume grid
+                polyscope::VolumeGrid* grid = polyscope::registerVolumeGrid(
+                    name, gridDim, boundLow, boundHigh
+                );
+                
+                // Add SDF scalar quantity with isosurface only (no slice plane, no volume)
+                auto* scalarQ = grid->addNodeScalarQuantity("distance", sdfValues, polyscope::DataType::SYMMETRIC);
+                scalarQ->setEnabled(true);
+                scalarQ->setIsosurfaceLevel(0.0f);
+                scalarQ->setIsosurfaceVizEnabled(true);
+                scalarQ->setIsosurfaceColor(isosurfaceColor);  // Consistent color for all models
+                scalarQ->setGridcubeVizEnabled(false);  // No volume rendering
+                scalarQ->setIsolinesEnabled(false);     // No isolines
+            }
+            
+            // Render one frame and take screenshot
+            polyscope::show(1);
+            
+            std::string filename = name + ".png";
+            polyscope::screenshot(filename, false);
+            std::cout << "    Saved: " << filename << "\n";
+        }
+        
+        polyscope::shutdown();
+        std::cout << "Done. Rendered " << availableSDFs.size() << " SDFs.\n";
+        return 0;
     }
 
     std::cout << "Evaluating SDF '" << sdfName << "' on " 
