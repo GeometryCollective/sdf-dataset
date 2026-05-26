@@ -11,3 +11,15 @@ authors:
     given-names: "Keenan"
 repository-code: "https://github.com/geometrycollective/sdf-dataset"
 license: MIT
+references:
+  - type: software
+    title: "sdf-explorer"
+    authors:
+      - family-names: "Takikawa"
+        given-names: "Towaki"
+      - family-names: "Glassner"
+        given-names: "Andrew"
+      - family-names: "McGuire"
+        given-names: "Morgan"
+    repository-code: "https://github.com/tovacinni/sdf-explorer"
+    message: "Examples in this repository are ported from:"
