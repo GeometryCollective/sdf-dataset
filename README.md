@@ -1,4 +1,4 @@
-# Conservative SDF
+# Conservative SDF Dataset
 
 ![video of the interface inspecting an sdf shape](media/ui_sample.gif)
 
@@ -11,6 +11,8 @@ Examples were ported from GLSL shader code in the [sdf-explorer](https://github.
 - **Animals**: Fish, and other organic forms
 - **Manufactured objects**: Teapots, gears, and mechanical parts
 - **Miscellaneous**: Food items, abstract shapes, and more
+
+⚠️ Though we have tried to be thorough in testing/evaluating our conversions, some bugs may persist.  If you encounter one, please don't hesitate to [create an issue](/../../issues) or [open a PR](../../pulls).
 
 ## Installation & Building
 
