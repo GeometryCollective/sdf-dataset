@@ -9,6 +9,7 @@ authors:
     given-names: "Mark"
   - family-names: "Crane"
     given-names: "Keenan"
+date-released: 2026-05-26
 repository-code: "https://github.com/geometrycollective/sdf-dataset"
 license: MIT
 references:
