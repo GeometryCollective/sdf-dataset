@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Conservative SDF Dataset"
+authors:
+  - family-names: "Baktash"
+    given-names: "Hossein"
+  - family-names: "Gillespie"
+    given-names: "Mark"
+  - family-names: "Crane"
+    given-names: "Keenan"
+repository-code: "https://github.com/geometrycollective/sdf-dataset"
+license: MIT
